@@ -18,6 +18,7 @@ from agents import Boid
 from mesa.experimental.continuous_space import ContinuousSpace
 from mesa.datacollection import DataCollector
 
+import sklearn.cluster as cl
 
 class BoidFlockers(Model):
     """Flocker model class. Handles agent creation, placement and scheduling."""

@@ -8,11 +8,11 @@ authors = [
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "mesa[rec] (>=3.1.4,<4.0.0)",
-    "numpy"
+    "mesa[rec] @ https://github.com/projectmesa/mesa.git",
+    "numpy",
+    "scikit-learn",
+    "network",
+    "viz"
 ]
 
 
-[build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
-build-backend = "poetry.core.masonry.api"
