@@ -1,5 +1,18 @@
 # cs7631-mrs
 
-## Instructions
+## Installation Instructions
 
-Download NetLogo into this directory
+Install dependencies. Consider using the `uv` tool.
+
+```
+uv venv
+uv sync
+```
+
+## Usage
+
+Go to the mesa directory and run
+
+```
+solara run app.py
+```

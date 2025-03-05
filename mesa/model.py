@@ -52,6 +52,9 @@ class BoidFlockers(Model):
         """
         super().__init__(seed=seed)
 
+        self.vision = vision
+        self.population_size = population_size
+
         # Set up the space
         self.space = ContinuousSpace(
             [[0, width], [0, height]],
@@ -80,9 +83,10 @@ class BoidFlockers(Model):
         # For tracking statistics
         self.average_heading = None
         self.update_average_heading()
+        self.num_clusters = self.population_size
 
         self.datacollector = DataCollector(
-            # model_reporters={"AvgHeading": self.report_average_heading},
+            model_reporters={"NumClusters": "num_clusters"},
             agent_reporters={
                 "Angle": "angle",
                 "Vision": "vision",
@@ -90,7 +94,8 @@ class BoidFlockers(Model):
                 "CohereFactor": "cohere_factor",
                 "SeparateFactor": "separate_factor",
                 "MatchFactor": "match_factor",
-                "NeighborDiffSum": "neighbor_diff_sum"
+                "NeighborDiffSum": "neighbor_diff_sum",
+                "NeighborInfo": "neighbor_info"
             }
         )
 
@@ -106,14 +111,24 @@ class BoidFlockers(Model):
         mean_heading = np.mean(headings, axis=0)
         self.average_heading = np.arctan2(mean_heading[1], mean_heading[0])
 
-    def report_average_heading(self):
-        return self.average_heading
+    def cluster_agents(self):
+        positions = np.array(self.agents.get("position"))
+        _, labels = cl.dbscan(positions, 
+                              eps=self.vision,
+                              min_samples=1)
+        agents_list = list(self.agents)
+        for i in range(len(agents_list)):
+            agents_list[i].cluster = labels.tolist()[i]
+        self.num_clusters = max(labels) + 1
+
 
     def step(self):
         """Run one step of the model.
 
         All agents are activated in random order using the AgentSet shuffle_do method.
         """
-        self.agents.shuffle_do("step")
+        self.agents.do("step")
         self.update_average_heading()
         self.datacollector.collect(self)
+        self.cluster_agents()
+

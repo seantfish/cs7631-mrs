@@ -6,6 +6,7 @@ sys.path.insert(0, os.path.abspath("../../../.."))
 from model import BoidFlockers
 from mesa.visualization import Slider, SolaraViz, make_space_component, make_plot_component
 from matplotlib.path import Path
+import matplotlib.colors as mcolors
 
 import numpy as np
 
@@ -29,7 +30,13 @@ def boid_draw(agent):
 
     arrow_marker = Path(arrow_points.dot(rot_matrix.T))
 
-    return {"color": "red", "size": 20, "marker": arrow_marker}
+    color = "black"
+    if agent.cluster > -1:
+        color_keys = list(mcolors.TABLEAU_COLORS.keys())
+
+        color = color_keys[agent.cluster % len(color_keys)]
+
+    return {"color": color, "size": 20, "marker": arrow_marker}
 
 
 
@@ -75,11 +82,11 @@ model = BoidFlockers()
 
 main_space = make_space_component(agent_portrayal=boid_draw, post_process=post_process, backend="matplotlib")
 
-# heading_plot = make_plot_component("AvgHeading")
+clusters_plot = make_plot_component("NumClusters")
 
 page = SolaraViz(
     model,
-    components=[main_space],
+    components=[main_space, clusters_plot],
     model_params=model_params,
     name="Boid Flocking Model",
 )

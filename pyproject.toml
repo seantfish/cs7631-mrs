@@ -12,7 +12,9 @@ dependencies = [
     "numpy",
     "scikit-learn",
     "network",
-    "viz"
+    "viz",
+    "jupyterlab",
+    "torch"
 ]
 
 
