@@ -61,29 +61,42 @@ class Boid(ContinuousSpaceAgent):
         self.neighbor_diff_sum = [0, 0]
         self.norm_dir = self.direction
         self.angle = get_angle(self.norm_dir)
+        self.cluster = -1
+        self.neighbor_info = np.zeros((8)).tolist()
 
 
     def step(self):
         """Get the Boid's neighbors, compute the new vector, and move accordingly."""
-        neighbors, distances = self.get_neighbors_in_radius(radius=self.vision)
-        self.neighbors = [n for n in neighbors if n is not self]
+        # neighbors, distances = self.get_neighbors_in_radius(radius=self.vision)
+        n_neighbors, n_distances = self.get_nearest_neighbors(5)
+        neighbors = np.array([n for n, d in zip(n_neighbors, n_distances) if n is not self and d < self.vision])
+        distances = np.array([d for n, d in zip(n_neighbors, n_distances) if n is not self and d < self.vision])
+
+        # NN Info
+        neighbor_info = np.zeros((8)).tolist()
 
         # If no neighbors, maintain current direction
-        if not neighbors:
+        if len(neighbors.tolist()) == 0:
             self.position += self.direction * self.speed
             self.neighbor_diff_sum = [0, 0]
             return
 
         delta = self.space.calculate_difference_vector(self.position, agents=neighbors)
         self.neighbor_diff_sum = delta.sum(axis=0).tolist()
+        self.neighbor_dists = delta.flatten()
+
+        self.neighbor_angles = np.array([get_angle(n.direction) for n in neighbors])
 
         cohere_vector = delta.sum(axis=0) * self.cohere_factor
+
         separation_vector = (
             -1 * delta[distances < self.separation].sum(axis=0) * self.separate_factor
         )
+
         match_vector = (
             np.asarray([n.direction for n in neighbors]).sum(axis=0) * self.match_factor
         )
+        
 
         # Update direction based on the three behaviors
         self.direction += (cohere_vector + separation_vector + match_vector) / len(
@@ -92,11 +105,19 @@ class Boid(ContinuousSpaceAgent):
 
         # Normalize direction vector
         self.direction /= np.linalg.norm(self.direction)
+        
 
         # Move boid
         self.position += self.direction * self.speed
         self.norm_dir = self.direction
         self.angle = get_angle(self.norm_dir)
+
+        neighbor_info += np.pad(self.angle, (0, 7), 'constant')
+        neighbor_info += np.pad(self.neighbor_diff_sum, (1, 5), 'constant')
+        # neighbor_info += np.pad(self.neighbor_dists, (0, 20 - self.neighbor_dists.shape[0]), 'constant')
+        neighbor_info += np.pad(self.neighbor_angles, (3, 5 - self.neighbor_angles.shape[0]), 'constant')
+        neighbor_info = neighbor_info.tolist()
+        self.neighbor_info = neighbor_info
 
 def get_angle(direction):
     angle = np.arctan2(direction[1], direction[0])
