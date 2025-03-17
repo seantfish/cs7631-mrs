@@ -84,7 +84,7 @@ class Boid(ContinuousSpaceAgent):
         if len(neighbors.tolist()) == 0:
             self.position += self.direction * self.speed
             self.neighbor_diff_sum = [0, 0]
-
+            return
 
         self.angle = get_angle(self.direction)
         delta = self.space.calculate_difference_vector(self.position, agents=neighbors)

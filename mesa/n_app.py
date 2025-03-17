@@ -83,10 +83,11 @@ model = BoidFlockers()
 main_space = make_space_component(agent_portrayal=boid_draw, post_process=post_process, backend="matplotlib")
 
 clusters_plot = make_plot_component("NumClusters")
+std_plot = make_plot_component("StdHeading")
 
 page = SolaraViz(
     model,
-    components=[main_space, clusters_plot],
+    components=[main_space, clusters_plot, std_plot],
     model_params=model_params,
     name="Boid Flocking Model",
 )

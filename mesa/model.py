@@ -86,7 +86,10 @@ class BoidFlockers(Model):
         self.num_clusters = self.population_size
 
         self.datacollector = DataCollector(
-            model_reporters={"NumClusters": "num_clusters"},
+            model_reporters={
+                "NumClusters": "num_clusters",
+                "StdHeading": "std_heading"
+                },
             agent_reporters={
                 "Angle": "angle",
                 "Vision": "vision",
@@ -109,7 +112,9 @@ class BoidFlockers(Model):
 
         headings = np.array([agent.direction for agent in self.agents])
         mean_heading = np.mean(headings, axis=0)
+        std_heading = np.std(headings, axis=0)
         self.average_heading = np.arctan2(mean_heading[1], mean_heading[0])
+        self.std_heading = np.arctan2(std_heading[1], std_heading[0])
 
     def cluster_agents(self):
         positions = np.array(self.agents.get("position"))
