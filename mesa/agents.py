@@ -116,15 +116,15 @@ class Boid(ContinuousSpaceAgent):
         self.angle = get_angle(self.norm_dir)
 
         neighbor_info += np.pad([self.angle], (0, 7), 'constant', constant_values=0)
-        print(self.angle)
-        print(neighbor_info)
+        # print(self.angle)
+        # print(neighbor_info)
         neighbor_info += np.pad(self.neighbor_diff_sum, (1, 5), 'constant', constant_values=0)
-        print(self.neighbor_diff_sum)
-        print(neighbor_info)
+        # print(self.neighbor_diff_sum)
+        # print(neighbor_info)
         # neighbor_info += np.pad(self.neighbor_dists, (0, 20 - self.neighbor_dists.shape[0]), 'constant')
         neighbor_info += np.pad(neighbor_angles, (3, 5 - neighbor_angles.shape[0]), 'constant', constant_values=0)
         neighbor_info = neighbor_info.tolist()
-        print(neighbor_info)
+        # print(neighbor_info)
 
         self.neighbor_info = neighbor_info
 
