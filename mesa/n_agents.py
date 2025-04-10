@@ -67,7 +67,7 @@ class Boid(ContinuousSpaceAgent):
         self.cluster = -1
         self.neighbor_info = np.zeros((8)).tolist()
 
-        self.nn_model = torch.load('../models/20250305_full', weights_only=False)
+        self.nn_model = torch.load('../models/20250305_v5_APR9run', weights_only=False)
         self.nn_model.eval()
 
 
@@ -98,6 +98,8 @@ class Boid(ContinuousSpaceAgent):
         neighbor_info = neighbor_info.tolist()
         self.neighbor_info = neighbor_info
 
+        # print(neighbor_info)
+
         ### REGULAR CODE
         # cohere_vector = delta.sum(axis=0) * self.cohere_factor
         # separation_vector = (
@@ -124,7 +126,7 @@ class Boid(ContinuousSpaceAgent):
 
         print(theta)
 
-        self.angle = self.angle + theta
+        self.angle = self.angle - theta
 
         nn_direction = get_direction(self.angle)
         self.direction = nn_direction / np.linalg.norm(nn_direction)

@@ -6,6 +6,7 @@ Install dependencies. Consider using the `uv` tool.
 
 ```
 uv venv
+source .venv/bin/activate
 uv sync
 ```
 
