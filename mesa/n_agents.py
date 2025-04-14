@@ -67,7 +67,7 @@ class Boid(ContinuousSpaceAgent):
         self.cluster = -1
         self.neighbor_info = np.zeros((8)).tolist()
 
-        self.nn_model = torch.load('../models/20250305_v5_APR9run', weights_only=False)
+        self.nn_model = torch.load('../models/20250414_revamp', weights_only=False)
         self.nn_model.eval()
 
 
@@ -77,67 +77,76 @@ class Boid(ContinuousSpaceAgent):
         neighbors = np.array([n for n, d in zip(n_neighbors, n_distances) if n is not self and d < self.vision])
         distances = np.array([d for n, d in zip(n_neighbors, n_distances) if n is not self and d < self.vision])
         
+        classic_direction = 0 + self.direction
+
         # NN Info
         neighbor_info = np.zeros((8)).tolist()
 
         # If no neighbors, maintain current direction
         if len(neighbors.tolist()) == 0:
-            self.position += self.direction * self.speed
-            self.neighbor_diff_sum = [0, 0]
-            return
+            # Calculate diff_sum
+            self.neighbor_diff_sum = [0, 0] # Early return here might have caused data issues
+            neighbor_angles = np.array([])
+        else:
+            # Calculate diff_sum
+            delta = self.space.calculate_difference_vector(self.position, agents=neighbors)
+            self.neighbor_diff_sum = delta.sum(axis=0).tolist()
 
-        self.angle = get_angle(self.direction)
-        delta = self.space.calculate_difference_vector(self.position, agents=neighbors)
-        self.neighbor_diff_sum = delta.sum(axis=0).tolist()
-        self.neighbor_dists = delta.flatten()
-        self.neighbor_angles = np.array([get_angle(n.direction) for n in neighbors])
-        neighbor_info += np.pad(self.angle, (0, 7), 'constant')
-        neighbor_info += np.pad(self.neighbor_diff_sum, (1, 5), 'constant')
-        # neighbor_info += np.pad(self.neighbor_dists, (0, 20 - self.neighbor_dists.shape[0]), 'constant')
-        neighbor_info += np.pad(self.neighbor_angles, (3, 5 - self.neighbor_angles.shape[0]), 'constant')
-        neighbor_info = neighbor_info.tolist()
-        self.neighbor_info = neighbor_info
+            self.neighbor_dists = delta.flatten()
+            neighbor_angles = np.array([get_angle(n.direction) for n in neighbors])
 
-        # print(neighbor_info)
+            # Cohere vector
+            cohere_vector = delta.sum(axis=0) * self.cohere_factor
 
-        ### REGULAR CODE
-        # cohere_vector = delta.sum(axis=0) * self.cohere_factor
-        # separation_vector = (
-        #     -1 * delta[distances < self.separation].sum(axis=0) * self.separate_factor
-        # )
-        # match_vector = (
-        #     np.asarray([n.direction for n in neighbors]).sum(axis=0) * self.match_factor
-        # )
+            # Separation vector
+            separation_vector = (
+                -1 * delta[distances < self.separation].sum(axis=0) * self.separate_factor
+            )
 
-        # reg_direction = self.direction
+            # Match vector
+            match_vector = (
+                np.asarray([n.direction for n in neighbors]).sum(axis=0) * self.match_factor
+            )
 
-        # # Update direction based on the three behaviors
-        # reg_direction += (cohere_vector + separation_vector + match_vector) / len(
-        #     neighbors
-        # )
+            # Update direction based on the three behaviors
+            classic_direction += (cohere_vector + separation_vector + match_vector) / len(
+                neighbors
+            )
 
-        # # Normalize direction vector
-        # reg_direction /= np.linalg.norm(reg_direction)
-        ### END REGULAR CODE
-
-        data = torch.tensor(self.neighbor_info, dtype=torch.float32)
-
-        theta = self.nn_model(data).item()
-
-        print(theta)
-
-        self.angle = self.angle - theta
+            # Normalize direction vector
+            classic_direction /= np.linalg.norm(classic_direction)
+            
+        # Retrieve NN angle
+        data = torch.tensor(neighbor_info, dtype=torch.float32)
+        self.angle = self.nn_model(data).item()
 
         nn_direction = get_direction(self.angle)
         self.direction = nn_direction / np.linalg.norm(nn_direction)
         
 
-
+        # Switch to classic
+        # self.direction = classic_direction
 
         # Move boid
         self.position += self.direction * self.speed
-        self.norm_dir =  self.direction
-        self.angle = get_angle(self.norm_dir)
+        self.norm_dir = self.direction
+
+        # Get angle information
+        classic_norm_dir =  classic_direction
+        classic_angle = get_angle(classic_norm_dir)
+
+        # Compare
+        angle_discrepancy = (self.angle - classic_angle) % math.pi
+
+        print("==============================")
+        print("CLASSIC DIRECTION: ", classic_direction)
+        print("NN DIRECTION: ", nn_direction)
+        print("SELF DIRECTION: ", self.direction)
+        print("CLASSIC ANGLE: ", classic_angle)
+        print("NN ANGLE: ", self.angle)
+        print("ANGLE DISCREPANCY: ", angle_discrepancy)
+
+
 
 def get_angle(direction):
     angle = np.arctan2(direction[1], direction[0])

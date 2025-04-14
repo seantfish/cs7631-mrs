@@ -109,10 +109,10 @@ class Boid(ContinuousSpaceAgent):
             # Normalize direction vector
             self.direction /= np.linalg.norm(self.direction)
             
-
         # Move boid
         self.position += self.direction * self.speed
         self.norm_dir = self.direction
+        # Get angle information
         self.angle = get_angle(self.norm_dir)
 
         neighbor_info += np.pad([self.angle], (0, 7), 'constant', constant_values=0)
