@@ -78,7 +78,7 @@ class Boid(ContinuousSpaceAgent):
         # If no neighbors, maintain current direction
         if len(neighbors.tolist()) == 0:
             # Calculate diff_sum
-            self.neighbor_diff_sum = [0, 0] # Early return here might have caused data issues
+            self.neighbor_diff_sum = [99999, 99999] # Early return here might have caused data issues
             neighbor_angles = np.array([])
         else:
             # Calculate diff_sum
@@ -113,6 +113,7 @@ class Boid(ContinuousSpaceAgent):
         self.position += self.direction * self.speed
         self.norm_dir = self.direction
         # Get angle information
+
         self.angle = get_angle(self.norm_dir)
 
         neighbor_info += np.pad([self.angle], (0, 7), 'constant', constant_values=0)
@@ -122,6 +123,7 @@ class Boid(ContinuousSpaceAgent):
         # print(self.neighbor_diff_sum)
         # print(neighbor_info)
         # neighbor_info += np.pad(self.neighbor_dists, (0, 20 - self.neighbor_dists.shape[0]), 'constant')
+        neighbor_angles = np.pad(neighbor_angles, (0, 5 - neighbor_angles.shape[0]), 'constant', constant_values=99999)
         neighbor_info += np.pad(neighbor_angles, (3, 5 - neighbor_angles.shape[0]), 'constant', constant_values=0)
         neighbor_info = neighbor_info.tolist()
         # print(neighbor_info)

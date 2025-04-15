@@ -67,7 +67,7 @@ class Boid(ContinuousSpaceAgent):
         self.cluster = -1
         self.neighbor_info = np.zeros((8)).tolist()
 
-        self.nn_model = torch.load('../models/20250414_revamp', weights_only=False)
+        self.nn_model = torch.load('../models/20250414_v3', weights_only=False)
         self.nn_model.eval()
 
 
@@ -85,7 +85,7 @@ class Boid(ContinuousSpaceAgent):
         # If no neighbors, maintain current direction
         if len(neighbors.tolist()) == 0:
             # Calculate diff_sum
-            self.neighbor_diff_sum = [0, 0] # Early return here might have caused data issues
+            self.neighbor_diff_sum = [99999, 99999] # Early return here might have caused data issues
             neighbor_angles = np.array([])
         else:
             # Calculate diff_sum
@@ -115,7 +115,18 @@ class Boid(ContinuousSpaceAgent):
 
             # Normalize direction vector
             classic_direction /= np.linalg.norm(classic_direction)
-            
+
+        neighbor_info += np.pad([self.angle], (0, 7), 'constant', constant_values=0)
+        # print(self.angle)
+        # print(neighbor_info)
+        neighbor_info += np.pad(self.neighbor_diff_sum, (1, 5), 'constant', constant_values=0)
+        # print(self.neighbor_diff_sum)
+        # print(neighbor_info)
+        # neighbor_info += np.pad(self.neighbor_dists, (0, 20 - self.neighbor_dists.shape[0]), 'constant')
+        neighbor_angles = np.pad(neighbor_angles, (0, 5 - neighbor_angles.shape[0]), 'constant', constant_values=99999)
+        neighbor_info += np.pad(neighbor_angles, (3, 5 - neighbor_angles.shape[0]), 'constant', constant_values=0)
+        neighbor_info = neighbor_info.tolist()
+
         # Retrieve NN angle
         data = torch.tensor(neighbor_info, dtype=torch.float32)
         self.angle = self.nn_model(data).item()
@@ -135,10 +146,13 @@ class Boid(ContinuousSpaceAgent):
         classic_norm_dir =  classic_direction
         classic_angle = get_angle(classic_norm_dir)
 
+
+
         # Compare
-        angle_discrepancy = (self.angle - classic_angle) % math.pi
+        angle_discrepancy = abs(self.angle - classic_angle) % math.pi
 
         print("==============================")
+        print("NEIGHBOR INFO: ", neighbor_info)
         print("CLASSIC DIRECTION: ", classic_direction)
         print("NN DIRECTION: ", nn_direction)
         print("SELF DIRECTION: ", self.direction)
