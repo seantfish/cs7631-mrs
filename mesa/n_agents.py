@@ -65,7 +65,7 @@ class Boid(ContinuousSpaceAgent):
         self.norm_dir = self.direction
         self.angle = get_angle(self.norm_dir)
         self.cluster = -1
-        self.neighbor_info = np.zeros((13)).tolist()
+        self.neighbor_info = np.zeros((16)).tolist()
 
         self.nn_model = torch.load('../models/20250418_v1_working', weights_only=False)
         self.nn_model.eval()
@@ -82,7 +82,7 @@ class Boid(ContinuousSpaceAgent):
         classic_direction = 0 + self.direction
 
         # NN Info
-        neighbor_info = np.zeros((13)).tolist()
+        neighbor_info = np.zeros((16)).tolist()
 
         # If no neighbors, maintain current direction
         if len(neighbors.tolist()) == 0:
@@ -120,23 +120,32 @@ class Boid(ContinuousSpaceAgent):
             # Normalize direction vector
             classic_direction /= np.linalg.norm(classic_direction)
 
-        neighbor_info += np.pad([self.angle], (0, 12), 'constant', constant_values=0)
+        prev_angle = self.angle
 
-        neighbor_info += np.pad(self.neighbor_diff_sum, (1, 10), 'constant', constant_values=0)     
+        neighbor_info += np.pad([self.speed], (0, 15), 'constant', constant_values=0)
+        neighbor_info += np.pad([self.vision], (1, 14), 'constant', constant_values=0)
+        neighbor_info += np.pad([self.separation], (2, 13), 'constant', constant_values=0)
+
+        neighbor_info += np.pad([prev_angle], (3, 12), 'constant', constant_values=0)
+
+        neighbor_info += np.pad(self.neighbor_diff_sum, (4, 10), 'constant', constant_values=0)     
 
         neighbor_angles = np.pad(neighbor_angles, (0, 5 - neighbor_angles.shape[0]), 'constant', constant_values=0)
-        neighbor_info += np.pad(neighbor_angles, (3, 10 - neighbor_angles.shape[0]), 'constant', constant_values=0)
+        neighbor_info += np.pad(neighbor_angles, (6, 10 - neighbor_angles.shape[0]), 'constant', constant_values=0)
 
         neighbor_presences = np.pad(neighbor_presences, (0, 5 - neighbor_presences.shape[0]))
 
-        neighbor_info += np.pad(neighbor_presences, (8, 0), 'constant', constant_values=0)
+        neighbor_info += np.pad(neighbor_presences, (11, 0), 'constant', constant_values=0)
         neighbor_info = neighbor_info.tolist()
 
-        assert neighbor_info[0] < 6.29, 'angle must not exceed 6.28, but found ' + str(neighbor_info[0])
+        neighbor_info = normalize_neighbor_info(neighbor_info)
+
+        # assert neighbor_info[ 6.29, 'angle must not exceed 6.28, but found ' + str(neighbor_info[0])
 
         # Retrieve NN angle
         data = torch.tensor(neighbor_info, dtype=torch.float32)
         self.angle = self.nn_model(data).item()
+        self.angle *= (2 * np.pi)
 
         self.angle = max(min(self.angle, 2 * np.pi), 0)
 
@@ -171,6 +180,8 @@ class Boid(ContinuousSpaceAgent):
 
         self.angle_discrepancy = angle_discrepancy
 
+        # Revert angle back to normalized 
+        self.angle /= 2 * np.pi
 
 def get_angle(direction):
     angle = np.arctan2(direction[1], direction[0])
@@ -179,3 +190,25 @@ def get_angle(direction):
 
 def get_direction(angle):
     return [-1 * math.sin(angle), math.cos(angle)]
+
+def normalize_neighbor_info(arr):
+    arr = np.array(arr)
+    norm_arr = arr.copy()
+
+    norm_arr[0] = norm_arr[0] / 10
+    norm_arr[1] = norm_arr[1] / 20
+    norm_arr[2] = norm_arr[2] / 10
+
+    # Angle is pre-normalized
+
+    min_ndiff = -21 * 5
+    max_ndiff = 21 * 5
+
+    norm_arr[4] = (arr[4] - min_ndiff) / (max_ndiff - min_ndiff)
+    norm_arr[5] = (arr[5] - min_ndiff) / (max_ndiff - min_ndiff)
+
+    norm_arr[6:11] = arr[6:11] / (2 * np.pi)
+
+    # On/off stays same
+    return norm_arr.tolist()
+

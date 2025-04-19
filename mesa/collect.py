@@ -1,5 +1,6 @@
 import os
 import sys
+import datetime
 
 sys.path.insert(0, os.path.abspath("../../../.."))
 
@@ -17,13 +18,71 @@ import pandas as pd
 #     df = model.datacollector.get_agent_vars_dataframe()
 #     df.to_csv('flocking_250409_v4.csv')
 
-def run_experiment():
+experiment_config = {
+    "name": str(int(datetime.datetime.now().timestamp())),
+    "seed": 42,
+    "runs": 2,
+    "population_size": 40,
+    "speed": {
+        "min": 1,
+        "max": 11,
+        "interval": 2,
+    },
+    "vision": {
+        "min": 1,
+        "max": 21,
+        "interval": 4,
+    },
+    "separation": {
+        "min": 1,
+        "max": 11,
+        "interval": 2
+    }
+}
+
+def run_experiments(config):
+    name = config['name']
+    speeds = list(range(config['speed']['min'],
+                        config['speed']['max'],
+                        config['speed']['interval']))
+    visions = list(range(config['vision']['min'],
+                         config['vision']['max'],
+                         config['vision']['interval']))
+    separations = list(range(config['separation']['min'],
+                             config['separation']['max'],
+                             config['separation']['interval']))
+    runs = config['runs']
+    pop = config['population_size']
+    print("Starting experiment ", name)
+    print("Running experiments with parameters:")
+    print("  Speeds:", speeds)
+    print("  Visions:", visions)
+    print("  Separations:", separations)
+
+    os.mkdir("../data/" + name)
+
+    for speed in speeds:
+        for vision in visions:
+            for separation in separations:
+                run_experiment(
+                    name=(name + '/' + 'spd' + str(speed) + 'vis' + str(vision) + 'sep' + str(separation)),
+                    pop_size=pop,
+                    speed=speed,
+                    vision=vision, 
+                    separation=separation,
+                    runs=runs)
+
+
+
+def run_experiment(name='data', pop_size=20, speed=1, vision=10, separation=2, runs=50):
     all_data = []  # List to store data from each run
 
-    
-
-    for run_id in range(50):
-        model = BoidFlockers(population_size=20)
+    for run_id in range(runs):
+        model = BoidFlockers(
+            population_size=pop_size,
+            speed=speed,
+            vision=vision,
+            separation=separation)
         n = 0
 
         while model.running and n < 300:
@@ -37,7 +96,7 @@ def run_experiment():
 
     # Combine all dataframes
     combined_df = pd.concat(all_data)
-    combined_df.to_csv("flocking_250418_v1.csv")
+    combined_df.to_csv("../data/" + name + ".csv")    
     
 
-run_experiment()
+run_experiments(experiment_config)

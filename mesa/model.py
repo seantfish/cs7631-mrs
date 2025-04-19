@@ -92,12 +92,6 @@ class BoidFlockers(Model):
                 },
             agent_reporters={
                 "Angle": "angle",
-                "Vision": "vision",
-                "Separation": "separation",
-                "CohereFactor": "cohere_factor",
-                "SeparateFactor": "separate_factor",
-                "MatchFactor": "match_factor",
-                "NeighborDiffSum": "neighbor_diff_sum",
                 "NeighborInfo": "neighbor_info"
             }
         )
