@@ -102,8 +102,6 @@ class BoidFlockers(Model):
             }
         )
 
-        self.datacollector.collect(self)
-
     def update_average_heading(self):
         """Calculate the average heading (direction) of all Boids."""
         if not self.agents:

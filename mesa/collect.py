@@ -20,9 +20,12 @@ import pandas as pd
 def run_experiment():
     all_data = []  # List to store data from each run
 
+    
+
     for run_id in range(50):
         model = BoidFlockers(population_size=20)
         n = 0
+
         while model.running and n < 300:
             model.step()
             print(f"Run {run_id + 1}, Step: {n}")
@@ -34,7 +37,7 @@ def run_experiment():
 
     # Combine all dataframes
     combined_df = pd.concat(all_data)
-    combined_df.to_csv("flocking_250414_v2.csv")
+    combined_df.to_csv("flocking_250418_v1.csv")
     
 
 run_experiment()

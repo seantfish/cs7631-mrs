@@ -84,11 +84,14 @@ class BoidFlockers(Model):
         self.average_heading = None
         self.update_average_heading()
         self.num_clusters = self.population_size
+        self.average_discrepancy = None
+        self.update_average_discrepancy()
 
         self.datacollector = DataCollector(
             model_reporters={
                 "NumClusters": "num_clusters",
-                "StdHeading": "std_heading"
+                "StdHeading": "std_heading",
+                "Discrepancy": "average_discrepancy"
                 },
             agent_reporters={
                 "Angle": "angle",
@@ -115,6 +118,14 @@ class BoidFlockers(Model):
         self.average_heading = np.arctan2(mean_heading[1], mean_heading[0])
         self.std_heading = np.arctan2(std_heading[1], std_heading[0])
 
+    def update_average_discrepancy(self):
+        if not self.agents:
+            self.average_discrepancy = 0
+            return
+        
+        discrepancies = np.array([agent.angle_discrepancy for agent in self.agents])
+        self.average_discrepancy = np.mean(discrepancies, axis=0)
+
     def cluster_agents(self):
         positions = np.array(self.agents.get("position"))
         _, labels = cl.dbscan(positions, 
@@ -133,6 +144,7 @@ class BoidFlockers(Model):
         """
         self.agents.do("step")
         self.update_average_heading()
+        self.update_average_discrepancy()
         self.datacollector.collect(self)
         self.cluster_agents()
 

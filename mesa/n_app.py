@@ -84,10 +84,11 @@ main_space = make_space_component(agent_portrayal=boid_draw, post_process=post_p
 
 clusters_plot = make_plot_component("NumClusters")
 std_plot = make_plot_component("StdHeading")
+disc_plot = make_plot_component("Discrepancy")
 
 page = SolaraViz(
     model,
-    components=[main_space, clusters_plot, std_plot],
+    components=[main_space, clusters_plot, std_plot, disc_plot],
     model_params=model_params,
     name="Boid Flocking Model",
 )
