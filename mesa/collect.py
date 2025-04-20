@@ -21,7 +21,7 @@ import pandas as pd
 experiment_config = {
     "name": str(int(datetime.datetime.now().timestamp())),
     "seed": 42,
-    "runs": 2,
+    "runs": 1,
     "population_size": 40,
     "speed": {
         "min": 1,
@@ -61,9 +61,11 @@ def run_experiments(config):
 
     os.mkdir("../data/" + name)
 
+    i = 0
     for speed in speeds:
         for vision in visions:
             for separation in separations:
+                print("RUN:", i)
                 run_experiment(
                     name=(name + '/' + 'spd' + str(speed) + 'vis' + str(vision) + 'sep' + str(separation)),
                     pop_size=pop,
@@ -71,6 +73,7 @@ def run_experiments(config):
                     vision=vision, 
                     separation=separation,
                     runs=runs)
+                i += 1
 
 
 
@@ -87,7 +90,7 @@ def run_experiment(name='data', pop_size=20, speed=1, vision=10, separation=2, r
 
         while model.running and n < 300:
             model.step()
-            print(f"Run {run_id + 1}, Step: {n}")
+            # print(f"Run {run_id + 1}, Step: {n}")
             n += 1
 
         df = model.datacollector.get_agent_vars_dataframe()

@@ -91,7 +91,7 @@ class BoidFlockers(Model):
                 "StdHeading": "std_heading"
                 },
             agent_reporters={
-                "Angle": "angle",
+                "NormDir": "norm_dir",
                 "NeighborInfo": "neighbor_info"
             }
         )

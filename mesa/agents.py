@@ -5,7 +5,7 @@ of flocking behavior.
 """
 
 import numpy as np
-
+import copy
 from mesa.experimental.continuous_space import ContinuousSpaceAgent
 
 
@@ -62,7 +62,7 @@ class Boid(ContinuousSpaceAgent):
         self.norm_dir = self.direction
         self.angle = get_angle(self.norm_dir) / (2 * np.pi)
         self.cluster = -1
-        self.neighbor_info = np.zeros((16)).tolist()
+        self.neighbor_info = np.zeros((17)).tolist()
 
 
     def step(self):
@@ -73,22 +73,24 @@ class Boid(ContinuousSpaceAgent):
         distances = np.array([d for n, d in zip(n_neighbors, n_distances) if n is not self and d < self.vision])
 
         # NN Info
-        neighbor_info = np.zeros((16)).tolist()
+        neighbor_info = np.zeros((17)).tolist()
+        prev_norm_dir = copy.deepcopy(self.norm_dir)
 
         # If no neighbors, maintain current direction
         if len(neighbors.tolist()) == 0:
             # Calculate diff_sum
             self.neighbor_diff_sum = [0, 0] # Early return here might have caused data issues
             neighbor_angles = np.array([])
-            neighbor_presences = np.array([])
+            # neighbor_presences = np.array([])
         else:
             # Calculate diff_sum
             delta = self.space.calculate_difference_vector(self.position, agents=neighbors)
             self.neighbor_diff_sum = delta.sum(axis=0).tolist()
 
             self.neighbor_dists = delta.flatten()
-            neighbor_angles = np.array([get_angle(n.direction) for n in neighbors])
-            neighbor_presences = np.ones([neighbor_angles.shape[0]])
+            neighbor_angles = np.array([i for n in neighbors for i in (n.direction / np.linalg.norm(n.direction))])
+            # print(neighbor_angles)
+            # neighbor_presences = np.ones([neighbor_angles.shape[0]])
 
             # Cohere vector
             cohere_vector = delta.sum(axis=0) * self.cohere_factor
@@ -111,33 +113,34 @@ class Boid(ContinuousSpaceAgent):
             # Normalize direction vector
             self.direction /= np.linalg.norm(self.direction)
             
+        
         # Move boid
         self.position += self.direction * self.speed
         self.norm_dir = self.direction
         # Get angle information
 
-        prev_angle = self.angle
+        # prev_angle = self.angle
+        # print(prev_norm_dir, self.norm_dir)
+
 
         self.angle = get_angle(self.norm_dir) / (2 * np.pi)
 
-        neighbor_info += np.pad([self.speed], (0, 15), 'constant', constant_values=0)
-        neighbor_info += np.pad([self.vision], (1, 14), 'constant', constant_values=0)
-        neighbor_info += np.pad([self.separation], (2, 13), 'constant', constant_values=0)
+        neighbor_info += np.pad([self.speed], (0, 16), 'constant', constant_values=0)
+        neighbor_info += np.pad([self.vision], (1, 15), 'constant', constant_values=0)
+        neighbor_info += np.pad([self.separation], (2, 14), 'constant', constant_values=0)
 
-        neighbor_info += np.pad([prev_angle], (3, 12), 'constant', constant_values=0)
+        neighbor_info += np.pad(prev_norm_dir, (3, 12), 'constant', constant_values=0)
 
-        neighbor_info += np.pad(self.neighbor_diff_sum, (4, 10), 'constant', constant_values=0)     
+        neighbor_info += np.pad(self.neighbor_diff_sum, (5, 10), 'constant', constant_values=0)
 
-        neighbor_angles = np.pad(neighbor_angles, (0, 5 - neighbor_angles.shape[0]), 'constant', constant_values=0)
-        neighbor_info += np.pad(neighbor_angles, (6, 10 - neighbor_angles.shape[0]), 'constant', constant_values=0)
+        neighbor_angles = np.pad(neighbor_angles, (0, 10 - neighbor_angles.shape[0]), 'constant', constant_values=0)
+        neighbor_info += np.pad(neighbor_angles, (7, 0), 'constant', constant_values=0)
 
-        neighbor_presences = np.pad(neighbor_presences, (0, 5 - neighbor_presences.shape[0]))
-
-        neighbor_info += np.pad(neighbor_presences, (11, 0), 'constant', constant_values=0)
         neighbor_info = neighbor_info.tolist()
 
         neighbor_info = normalize_neighbor_info(neighbor_info)
 
+        # print(neighbor_info)
 
         # assert neighbor_info[0] < 6.29, 'angle must not exceed 6.28'
         self.neighbor_info = neighbor_info
@@ -160,10 +163,8 @@ def normalize_neighbor_info(arr):
     min_ndiff = -21 * 5
     max_ndiff = 21 * 5
 
-    norm_arr[4] = (arr[4] - min_ndiff) / (max_ndiff - min_ndiff)
     norm_arr[5] = (arr[5] - min_ndiff) / (max_ndiff - min_ndiff)
-
-    norm_arr[6:11] = arr[6:11] / (2 * np.pi)
+    norm_arr[6] = (arr[6] - min_ndiff) / (max_ndiff - min_ndiff)
 
     # On/off stays same
     return norm_arr.tolist()
