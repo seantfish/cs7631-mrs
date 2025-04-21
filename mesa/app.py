@@ -48,10 +48,10 @@ model_params = {
     },
     "population_size": Slider(
         label="Number of boids",
-        value=20,
+        value=30,
         min=1,
         max=200,
-        step=10,
+        step=1,
     ),
     "width": 100,
     "height": 100,

@@ -112,18 +112,25 @@ class Boid(ContinuousSpaceAgent):
 
             # Normalize direction vector
             self.direction /= np.linalg.norm(self.direction)
+            self.norm_dir = self.direction
             
         
+        self.angle = get_angle(self.norm_dir) / (2 * np.pi)
+
+        # Randomly alter some boids
+        if np.random.rand() < 0.005:
+            self.direction = self.rng.uniform(-1, 1, size=(2))
+            self.norm_dir /= np.linalg.norm(self.direction)
+
         # Move boid
-        self.position += self.direction * self.speed
-        self.norm_dir = self.direction
+        self.position += self.norm_dir * self.speed
         # Get angle information
 
         # prev_angle = self.angle
         # print(prev_norm_dir, self.norm_dir)
 
 
-        self.angle = get_angle(self.norm_dir) / (2 * np.pi)
+        
 
         neighbor_info += np.pad([self.speed], (0, 16), 'constant', constant_values=0)
         neighbor_info += np.pad([self.vision], (1, 15), 'constant', constant_values=0)

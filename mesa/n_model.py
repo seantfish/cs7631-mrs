@@ -94,13 +94,8 @@ class BoidFlockers(Model):
                 "Discrepancy": "average_discrepancy"
                 },
             agent_reporters={
-                "Angle": "angle",
-                "Vision": "vision",
-                "Separation": "separation",
-                "CohereFactor": "cohere_factor",
-                "SeparateFactor": "separate_factor",
-                "MatchFactor": "match_factor",
-                "NeighborDiffSum": "neighbor_diff_sum",
+                "NormDir": "norm_dir",
+                "NeighborInfo": "neighbor_info"
             }
         )
 

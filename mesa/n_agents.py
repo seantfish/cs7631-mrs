@@ -68,12 +68,12 @@ class Boid(ContinuousSpaceAgent):
         self.cluster = -1
         self.neighbor_info = np.zeros((17)).tolist()
 
-        self.nn_model = torch.load('../models/20250419_v5', weights_only=False)
+        self.nn_model = torch.load('../models/20250420_v2', weights_only=False)
         self.nn_model.eval()
         
         self.angle_discrepancy = 0.0
 
-        self.warm_start_steps = 50
+        self.warm_start_steps = 0
 
 
     def step(self):

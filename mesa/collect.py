@@ -21,8 +21,8 @@ import pandas as pd
 experiment_config = {
     "name": str(int(datetime.datetime.now().timestamp())),
     "seed": 42,
-    "runs": 1,
-    "population_size": 40,
+    "runs": 4,
+    "population_size": 30,
     "speed": {
         "min": 1,
         "max": 11,
